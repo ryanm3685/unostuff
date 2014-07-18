@@ -12,6 +12,7 @@ import javax.imageio.*;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.Vector;
+import java.util.Random;
 
 public class UnoFrame extends JFrame implements ActionListener
 {
@@ -50,11 +51,12 @@ public class UnoFrame extends JFrame implements ActionListener
     
     UnoFrame u;
     TableFrame tf;
+    Random r; //used for random number generation
 
     public UnoFrame()
     {
         u = this;
-        
+        r = new Random();
         //Object[] options = { "Yes", "No" }; //for computer player dialog
         //Object[] onlyoption = { "OK" };
         
@@ -244,7 +246,7 @@ public class UnoFrame extends JFrame implements ActionListener
                 {
                     lastWild = true;
                     currentColor = chooseWild();
-                    if (bestCard.getValue() == 14) drawfour();
+                    if (bestCard.getValue() == 14) handleDrawFour();
                 }
 
                 switch (bestCard.getValue()) //10 = skip, 11 = reverse, 12 = draw 2
@@ -255,7 +257,7 @@ public class UnoFrame extends JFrame implements ActionListener
                     reverse();
                     break;
                     case 12:
-                    drawtwo();
+                    drawCards(2);
                     break;
                 }
 
@@ -300,9 +302,7 @@ public class UnoFrame extends JFrame implements ActionListener
                 c.add(cardButtons[i]);
             }
         }
-        
-        
-        
+           
         pack();
     }
     
@@ -356,8 +356,6 @@ public class UnoFrame extends JFrame implements ActionListener
 
         }
         
-        //u.setVisible(false);
-        System.out.println("adding data");
         tf.addData(playerList);
         tf.pack();
         tf.setVisible(true);
@@ -380,21 +378,14 @@ public class UnoFrame extends JFrame implements ActionListener
         if (playerList.size() == 2) nextPlayer();
     }
 
-    public void drawtwo()
+     public void drawCards(int n)
     {
         nextPlayer();
-        //draw the two cards
-        playerList.get(currentPlayerNumber).addCard(mainDeck.getTopCard());
-        playerList.get(currentPlayerNumber).addCard(mainDeck.getTopCard());
-    }
-
-    public void drawfour()
-    {
-        nextPlayer();
-        //draw the four cards
-        for (int i = 0; i < 4; i++)
+        //draw the n cards
+        for (int i = 0; i < n; i++)
             playerList.get(currentPlayerNumber).addCard(mainDeck.getTopCard());
     }
+
 
     public String chooseWild()
     {
@@ -445,13 +436,14 @@ public class UnoFrame extends JFrame implements ActionListener
         {
     
         }
+        //done looking at scores
         else if ("Continue".equals(e.getActionCommand()))
         {   
-            c.remove(continueButton);
-            tf.setVisible(false);
-            skipSelf.setEnabled(true);
+            c.remove(continueButton);//continue button shouldn't be around during play
+            tf.setVisible(false);//don't want to see the scores table frame
+            skipSelf.setEnabled(true);//bring back necessary buttons for play
             drawCard.setEnabled(true);
-            restart();
+            restart(); //start next round
         }
         else
         {
@@ -461,9 +453,9 @@ public class UnoFrame extends JFrame implements ActionListener
             Card theCard = currentPlayer.chooseCard(cardIndex);
             //handle word cards 10 = skip, 11 = reverse, 12 = draw 2, 14 = wild draw 4
 
-                if (theCard.getValue() == 10) nextPlayer(); //move to the next player
-                if (theCard.getValue() == 11) reverse(); //reverse direction
-                if (theCard.getValue() == 12) drawtwo();    
+            if (theCard.getValue() == 10) nextPlayer(); //move to the next player
+            if (theCard.getValue() == 11) reverse(); //reverse direction
+            if (theCard.getValue() == 12) drawCards(2);    
 
             
             if (theCard.getColor().compareTo("black") == 0)
@@ -475,38 +467,7 @@ public class UnoFrame extends JFrame implements ActionListener
                 //wild draw 4
                 if (theCard.getValue() == 14)
                 {
-                    
-                    
-                    //did player throwing draw four have color
-                    boolean hasColor = false;
-                    for (int i = 0; i < currentPlayer.getNumberOfCards(); i++)
-                        if (currentPlayer.chooseCard(i).getColor().compareTo(currentColor) == 0)
-                            hasColor = true;
-                    
-                    nextPlayer();
-                    Object[] challengechoices = {"yes", "no"};
-                    String challenge = (String)JOptionPane.showInputDialog(this, "Challenge?", "Do they have " + currentColor + "?", JOptionPane.PLAIN_MESSAGE, null, challengechoices, "yes");
-                    //no challenge
-                    if (challenge.compareTo("no") == 0)
-                        for (int i = 0; i < 4; i++)
-                            playerList.get(currentPlayerNumber).addCard(mainDeck.getTopCard());
-                    //they challenge
-                    if (challenge.compareTo("yes") == 0)
-                    {
-                        if (hasColor) //challenger wins, makes player take four cards plus thrown draw four
-                        {
-                            prevPlayer();//go back to player who threw
-                            playerList.get(currentPlayerNumber).addCard(discardDeck.getTopCard());
-                            for (int i = 0; i < 4; i++)
-                                playerList.get(currentPlayerNumber).addCard(mainDeck.getTopCard());
-                        }
-                        else //challenger loses, draws six cards!
-                        {
-                            for (int i = 0; i < 6; i++)
-                                playerList.get(currentPlayerNumber).addCard(mainDeck.getTopCard());
-                        }
-                    }
-
+                    handleDrawFour();
                 }
             }
             else
@@ -524,6 +485,55 @@ public class UnoFrame extends JFrame implements ActionListener
         play();
         
     }
+
+    public void handleDrawFour()
+    {
+        //did player throwing draw four have color
+        boolean hasColor = false;
+        for (int i = 0; i < currentPlayer.getNumberOfCards(); i++)
+            if (currentPlayer.chooseCard(i).getColor().compareTo(currentColor) == 0)
+                hasColor = true;
+        System.out.println(currentPlayer.getName() + " threw draw 4");           
+        nextPlayer();
+        System.out.println(currentPlayer.getName() + " may choose to challenge");            
+
+        String challenge;
+                    if (!currentPlayer.getIsComputer())
+                    {
+                        System.out.println(currentPlayer.getName() + " isn't computer");
+                        //create dialog only for human players
+                        Object[] challengechoices = {"yes", "no"};
+                        challenge = (String)JOptionPane.showInputDialog(this, "Challenge?", "Do they have " + currentColor + "?", JOptionPane.PLAIN_MESSAGE, null, challengechoices, "yes");
+                    }
+                    else
+                    {
+                        //computer will randomly challenge based on number generator
+                        System.out.println(currentPlayer.getName() + " is computer");
+                        int i = r.nextInt();
+                        if ((i % 2) == 0) challenge = "no";
+                        else challenge = "yes";
+                        System.out.println (currentPlayer.getName() + " challenge = " + challenge);
+                    }
+                    prevPlayer();//back up one player so that the correct player actually gets the cards
+                    //since drawCards() calls nextPlayer() automatically
+                    //no challenge
+                    if (challenge.compareTo("no") == 0) drawCards(4);
+                    //they challenge
+                    if (challenge.compareTo("yes") == 0)
+                    {
+
+                        if (hasColor) //challenger wins, makes player take four cards plus thrown draw four
+                        {
+                            prevPlayer();//go back to player who threw
+                            playerList.get(currentPlayerNumber).addCard(discardDeck.getTopCard());
+                            drawCards(4);
+                        }
+                        else //challenger loses, draws six cards!
+                        {
+                            drawCards(6);
+                        }
+                    }
+    }
     
     public void nextPlayer()
     {
@@ -539,6 +549,8 @@ public class UnoFrame extends JFrame implements ActionListener
                 currentPlayerNumber = (playerList.size() - 1);
                 else currentPlayerNumber--;
         }
+
+        currentPlayer = playerList.get(currentPlayerNumber);
 
     }
     
@@ -556,6 +568,8 @@ public class UnoFrame extends JFrame implements ActionListener
                 currentPlayerNumber = (playerList.size() - 1);
             else currentPlayerNumber--;
         }
+
+        currentPlayer = playerList.get(currentPlayerNumber);
 
     }
 }
