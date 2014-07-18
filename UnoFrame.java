@@ -352,13 +352,12 @@ public class UnoFrame extends JFrame implements ActionListener
                                           playerList.get(0).getName() + " has won it all!",
                                           "Congrats!",
                                           JOptionPane.PLAIN_MESSAGE);
-           // System.exit(0);
+            System.exit(0); //TODO: make it so that players can play again with new players
 
         }
         
         //u.setVisible(false);
         System.out.println("adding data");
-        System.out.println(playerList);
         tf.addData(playerList);
         tf.pack();
         tf.setVisible(true);
@@ -449,6 +448,7 @@ public class UnoFrame extends JFrame implements ActionListener
         else if ("Continue".equals(e.getActionCommand()))
         {   
             c.remove(continueButton);
+            tf.setVisible(false);
             skipSelf.setEnabled(true);
             drawCard.setEnabled(true);
             restart();
