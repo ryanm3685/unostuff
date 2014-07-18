@@ -246,7 +246,6 @@ public class UnoFrame extends JFrame implements ActionListener
                 {
                     lastWild = true;
                     currentColor = chooseWild();
-                    if (bestCard.getValue() == 14) handleDrawFour();
                 }
 
                 switch (bestCard.getValue()) //10 = skip, 11 = reverse, 12 = draw 2
@@ -463,12 +462,6 @@ public class UnoFrame extends JFrame implements ActionListener
                 lastWild = true;
                 Object[] colorchoices = {"red", "green", "blue", "yellow"};
                 currentColor = (String)JOptionPane.showInputDialog(this, "Choose Color", "Choose Color",JOptionPane.PLAIN_MESSAGE, null, colorchoices, "red");
-                
-                //wild draw 4
-                if (theCard.getValue() == 14)
-                {
-                    handleDrawFour();
-                }
             }
             else
             {
@@ -486,54 +479,6 @@ public class UnoFrame extends JFrame implements ActionListener
         
     }
 
-    public void handleDrawFour()
-    {
-        //did player throwing draw four have color
-        boolean hasColor = false;
-        for (int i = 0; i < currentPlayer.getNumberOfCards(); i++)
-            if (currentPlayer.chooseCard(i).getColor().compareTo(currentColor) == 0)
-                hasColor = true;
-        System.out.println(currentPlayer.getName() + " threw draw 4");           
-        nextPlayer();
-        System.out.println(currentPlayer.getName() + " may choose to challenge");            
-
-        String challenge;
-                    if (!currentPlayer.getIsComputer())
-                    {
-                        System.out.println(currentPlayer.getName() + " isn't computer");
-                        //create dialog only for human players
-                        Object[] challengechoices = {"yes", "no"};
-                        challenge = (String)JOptionPane.showInputDialog(this, "Challenge?", "Do they have " + currentColor + "?", JOptionPane.PLAIN_MESSAGE, null, challengechoices, "yes");
-                    }
-                    else
-                    {
-                        //computer will randomly challenge based on number generator
-                        System.out.println(currentPlayer.getName() + " is computer");
-                        int i = r.nextInt();
-                        if ((i % 2) == 0) challenge = "no";
-                        else challenge = "yes";
-                        System.out.println (currentPlayer.getName() + " challenge = " + challenge);
-                    }
-                    prevPlayer();//back up one player so that the correct player actually gets the cards
-                    //since drawCards() calls nextPlayer() automatically
-                    //no challenge
-                    if (challenge.compareTo("no") == 0) drawCards(4);
-                    //they challenge
-                    if (challenge.compareTo("yes") == 0)
-                    {
-
-                        if (hasColor) //challenger wins, makes player take four cards plus thrown draw four
-                        {
-                            prevPlayer();//go back to player who threw
-                            playerList.get(currentPlayerNumber).addCard(discardDeck.getTopCard());
-                            drawCards(4);
-                        }
-                        else //challenger loses, draws six cards!
-                        {
-                            drawCards(6);
-                        }
-                    }
-    }
     
     public void nextPlayer()
     {
